@@ -32,6 +32,10 @@
 npm-debug.log
 testem.log
 /typings
+node_modules
+www
+cordova/platforms
+cordova/plugins
 
 # e2e
 /e2e/*.js
