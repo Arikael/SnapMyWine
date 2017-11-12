@@ -2,36 +2,25 @@ import { Taste } from './taste';
 import { TfResponse } from './tf-response';
 import { Observable } from 'rxjs/Observable';
 import { isNullOrUndefined } from 'util';
+import { BaseService } from './base.service';
 
-export class TasteService {
+export class TasteService extends BaseService {
 
-    constructor(private db: any) {
-
+    constructor(db: any) {
+        super(db);
     }
 
-    create(tasteObj: { id: string, category: string } | Taste ): Observable<TfResponse> {
+    create(tasteObj: { id: string, category: string } | Taste): Promise<any> {
 
         const taste = tasteObj instanceof Taste ? tasteObj : new Taste(tasteObj.id);
         taste.category = tasteObj.category;
-       
+
         const response = new TfResponse();
 
-        return this.db.get(taste._id).catch((error) => {
+        return this.db.put(taste);
+    }
 
-            if (error.status === 404) {
-
-                return this.db.put(taste);
-            }
-
-            throw error;
-        }).then((result) => {
-
-            response.ok = true;
-
-            return response;
-        }, (error) => {
-            return response.ok = false;
-        });
-
+    get(id: string): Promise<any> {
+        return this.db.get(id);
     }
 }

@@ -16,9 +16,8 @@ describe('tasteFramework test', () => {
 
     it('can store taste', () => {
         const taste = new Taste();
-        taste._id = "test";
+        taste._id = 'Raspberry';
         taste.category = 'Fruit';
-        taste.key = 'Raspberry';
 
         db.put(taste).then((response) => {
             expect(response.ok).toBeTruthy();
