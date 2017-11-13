@@ -1,8 +1,10 @@
-import { TestHelper } from './test-helper';
+import { TestHelper, arrayEquals } from './test-helper';
+import { Template } from './template';
 
 describe('template tests', () => {
 
     let db: any;
+    let template: Template;
 
     beforeEach(() => {
         db = TestHelper.createTestDb();
@@ -19,10 +21,58 @@ describe('template tests', () => {
 
     it('tasteCollection of templates cannot be null/empty/undefined', () => {
 
+        template = new Template();
+
+        expect(template.tastes).toBeTruthy();
+    });
+
+    it('all baseTemplates added in constructor are saved in .baseTemplates', () => {
+
+        const arr = [
+            createEmptyTemplate('template1'),
+            createEmptyTemplate('template2'),
+            createEmptyTemplate('template3')];
+        template = new Template(...arr);
+
+        expect(arrayEquals(arr.map(item => item._id), template.baseTemplates)).toBe(true);
+    });
+
+    it('baseTemplates added after constructor are saved in .baseTemplates', () => {
+
+        const arr = [
+            createEmptyTemplate('template1'),
+            createEmptyTemplate('template2'),
+            createEmptyTemplate('template3')];
+        template = new Template();
+
+        arr.forEach((element) => {
+            template.addBaseTemplate(element);
+        });
+
+        expect(arrayEquals(arr.map(item => item._id), template.baseTemplates)).toBe(true);
+    });
+
+    it('baseTemplate can\'t be added twice in constructor', () => {
+
+        expect(() => new Template(createEmptyTemplate('template1'),
+            createEmptyTemplate('template1'))).toThrowError();
+    });
+
+    it('baseTemplate can\'t be added twice after constructor', () => {
+
+        template = new Template(createEmptyTemplate('template1'));
+
+        expect(() => template.addBaseTemplate(createEmptyTemplate('template1'))).toThrowError();
+    });
+
+    // what happens when you add a baseTemplate with existing tastes?
+    it('adding a baseTemplate adds all tastes from it', () => {
+
         expect(true).toBe(false);
     });
 
-    it('templates baseTemplates can be empty but not null/undefined', () => {
+    // see above, if you add it manually this holds true
+    it('taste can\'t be added twice', () => {
 
         expect(true).toBe(false);
     });
@@ -36,6 +86,11 @@ describe('template tests', () => {
 
         expect(true).toBe(false);
     });
-
-    it('using the same template as base twice results in adding it only once')
 });
+
+function createEmptyTemplate(id: string) {
+    const template = new Template();
+    template._id = id;
+
+    return template;
+}
