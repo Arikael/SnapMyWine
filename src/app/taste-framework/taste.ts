@@ -1,6 +1,11 @@
 import { isNullOrUndefined } from 'util';
 
-export class Taste {
+export interface BaseTaste {
+    _id: string;
+    category: string;
+}
+
+export class Taste implements BaseTaste {
 
     static idPrefix = 'tastes';
 
@@ -13,6 +18,14 @@ export class Taste {
 
     _id: string;
     category: string;
+
+    get key(): string {
+        if (this._id.indexOf('/') === -1) {
+            return this._id;
+        }
+
+        return this._id.substring(this._id.lastIndexOf('/') + 1);
+    }
 
     setId(id: string) {
 

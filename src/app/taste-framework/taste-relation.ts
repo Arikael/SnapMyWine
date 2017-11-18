@@ -1,4 +1,4 @@
-export class TasteRelation {
-    intensity: Number;
+export interface TasteRelation {
+    intensity: number;
     tasteId: string;
 }
