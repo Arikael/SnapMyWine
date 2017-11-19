@@ -3,6 +3,8 @@ import { TemplateRelation } from './template-relation';
 import { TasteRelation } from './taste-relation';
 import { isNullOrUndefined } from 'util';
 import { Taste } from './taste';
+import { TasteDuplicateResolver } from './taste-duplicate-resolver/taste-duplicate-resolver';
+import { ResolveCombineResolver } from './taste-duplicate-resolver/resolve-combine-resolver';
 
 export class Template {
     static defaultTasteType = 'all';
@@ -15,7 +17,7 @@ export class Template {
     // - overwrite
     // - ignore
     // create strategy
-    constructor(...baseTemplates: Template[]) {
+    constructor(private tasteDuplicateResolver: TasteDuplicateResolver, ...baseTemplates: Template[]) {
 
         this.baseTemplates = [];
         this.tastes = {
@@ -42,11 +44,11 @@ export class Template {
         this.baseTemplates.push(template._id);
 
         for (const prop of Object.keys(template.tastes)) {
-            this.addTasteRelation(template.tastes[prop], prop);
+            this.addTasteRelations(template.tastes[prop], prop);
         }
     }
 
-    addTasteRelation(tastes: TasteRelation[], type: string) {
+    addTasteRelations(tastes: TasteRelation[], type: string) {
         tastes.forEach(taste => {
             this.addTaste({
                 _id: taste.tasteId,
@@ -70,6 +72,6 @@ export class Template {
             throw Error(`the supplied taste type '${type}' does not exists`);
         }
 
-        this.tastes[type].push(tasteRelation);
+        this.tasteDuplicateResolver.resolve(tasteRelation, this.tastes[type]);
     }
 }

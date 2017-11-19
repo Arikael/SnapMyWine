@@ -2,6 +2,7 @@ import { TestHelper, arrayEquals } from './test-helper';
 import { Template } from './template';
 import { Taste, BaseTaste } from './taste';
 import { isNullOrUndefined } from 'util';
+import { ResolveCombineResolver } from './taste-duplicate-resolver/resolve-combine-resolver';
 
 describe('template tests', () => {
 
@@ -51,7 +52,7 @@ describe('template tests', () => {
 
     it('tasteCollection of templates cannot be null/empty/undefined', () => {
 
-        template = new Template();
+        template = new Template(new ResolveCombineResolver());
 
         expect(template.tastes).toBeTruthy();
     });
@@ -62,7 +63,7 @@ describe('template tests', () => {
             createEmptyTemplate('template1'),
             createEmptyTemplate('template2'),
             createEmptyTemplate('template3')];
-        template = new Template(...arr);
+        template = new Template(new ResolveCombineResolver(), ...arr);
 
         expect(arrayEquals(arr.map(item => item._id), template.baseTemplates)).toBe(true);
     });
@@ -73,7 +74,7 @@ describe('template tests', () => {
             createEmptyTemplate('template1'),
             createEmptyTemplate('template2'),
             createEmptyTemplate('template3')];
-        template = new Template();
+        template = new Template(new ResolveCombineResolver());
 
         arr.forEach((element) => {
             template.addBaseTemplate(element);
@@ -84,20 +85,20 @@ describe('template tests', () => {
 
     it('baseTemplate can\'t be added twice in constructor', () => {
 
-        expect(() => new Template(createEmptyTemplate('template1'),
+        expect(() => new Template(new ResolveCombineResolver(), createEmptyTemplate('template1'),
             createEmptyTemplate('template1'))).toThrowError();
     });
 
     it('baseTemplate can\'t be added twice after constructor', () => {
 
-        template = new Template(createEmptyTemplate('template1'));
+        template = new Template(new ResolveCombineResolver(), createEmptyTemplate('template1'));
 
         expect(() => template.addBaseTemplate(createEmptyTemplate('template1'))).toThrowError();
     });
 
     it('adding tastes via addTaste adds it to the appropriate tastecollection', () => {
 
-        template = new Template();
+        template = new Template(new ResolveCombineResolver());
 
         addDefaultTastes(template);
 
@@ -109,7 +110,7 @@ describe('template tests', () => {
 
     it('added tastes via addTastes are completly stored (with intensity and _id) ', () => {
 
-        template = new Template();
+        template = new Template(new ResolveCombineResolver());
 
         addDefaultTastes(template);
 
@@ -122,7 +123,7 @@ describe('template tests', () => {
 
     it('adding a taste wihout a type adds it to the "all" templateCollection', () => {
 
-        template = new Template();
+        template = new Template(new ResolveCombineResolver());
 
         expect(() => template.addTaste(defaultBaseTaste, 1)).not.toThrow();
         const tasteToTest = { ...defaultBaseTaste, type: 'all' };
@@ -132,18 +133,18 @@ describe('template tests', () => {
 
     it('adding a taste with a non existant type throws an error', () => {
 
-        template = new Template();
+        template = new Template(new ResolveCombineResolver());
         expect(() => template.addTaste(defaultBaseTaste, 1, 'non-existant')).toThrow();
     });
 
     it('adding a taste with an intensity < 1 throws an error', () => {
-        template = new Template();
+        template = new Template(new ResolveCombineResolver());
 
         expect(() => template.addTaste(defaultBaseTaste, -1)).toThrow();
     });
 
     it('adding a taste with an intensity > 10 throws an error', () => {
-        template = new Template();
+        template = new Template(new ResolveCombineResolver());
 
         expect(() => template.addTaste(defaultBaseTaste, 11)).toThrow();
     });
@@ -151,9 +152,9 @@ describe('template tests', () => {
     // what happens when you add a baseTemplate with existing tastes?
     it('adding a baseTemplate adds all tastes from it', () => {
 
-        const template1 = new Template();
+        const template1 = new Template(new ResolveCombineResolver());
         addDefaultTastes(template1);
-        const template2 = new Template(template1);
+        const template2 = new Template(new ResolveCombineResolver(), template1);
         let success = false;
         defaultTastes.forEach(taste => {
             success = !isNullOrUndefined(getTasteFromTemplate(template2, taste));
@@ -163,9 +164,22 @@ describe('template tests', () => {
     });
 
     // see above, if you add it manually this holds true
-    it('taste can\'t be added twice', () => {
+    it('adding a taste twice combines it when using combine resolver', () => {
 
-        expect(true).toBe(false);
+        template = new Template(new ResolveCombineResolver());
+        const newTaste = { ...defaultTastes[0] };
+        newTaste.intensity = 2;
+
+        addDefaultTastes(template);
+        template.addTaste({
+            _id: newTaste._id,
+            category: null,
+        }, newTaste.intensity, newTaste.type);
+
+        const newIntensity = Math.ceil((newTaste.intensity + defaultTastes[0].intensity) / 2);
+        const combinedTaste = template.tastes[newTaste.type].find(item => item.tasteId === newTaste._id);
+
+        expect(combinedTaste.intensity).toBe(newIntensity);
     });
 
     // helpers
@@ -177,7 +191,7 @@ describe('template tests', () => {
 });
 
 function createEmptyTemplate(id: string) {
-    const template = new Template();
+    const template = new Template(new ResolveCombineResolver());
     template._id = id;
 
     return template;
